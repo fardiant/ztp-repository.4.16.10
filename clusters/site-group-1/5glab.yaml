@@ -1,0 +1,71 @@
+---
+apiVersion: ran.openshift.io/v1
+kind: SiteConfig
+metadata:
+  name: "5glab"
+  namespace: "5glab"
+spec:
+  # The base domain used by our SNOs
+  baseDomain: "tnc.bootcamp.lab"
+  # The secret name of the secret containing the pull secret for our disconnected registry
+  pullSecretRef:
+    name: "disconnected-registry-pull-secret"
+  # The OCP release we will be deploying otherwise specified (this can be configured per cluster as well)
+  clusterImageSetNameRef: "active-ocp-version"
+  # The ssh public key that will be injected into our SNOs authorized_keys
+  sshPublicKey: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDaXQE605aHsf4JpM2GWLbjZntBYECCNyGDLIs5tzLbVq8AG0F1PpxJfT21tdzfeC00tlYeahs+HWkRSnlYFjG8a3rIUcWorXl18B5P1kVOfWx408GA0xUzuR9riq3HguJZ/GLj0uosu2IwwXnv53hG5TTyxNuTwXgDpyDdweizw8v6ha3Oom/AXYiiK0wAk+vvWsJQv2yZReJxcnoN+irwHcqacaIJGwfgzDaGhgRyYOhsWzdqXRXZbodVOHiRvbiA3f0/4396YxmgHpR27E1pElIxfP+AnbdR0N4PaqhTe3ModC7R9f1cjuvdHsEsyEom8LvwVbOKJIU+NQkO0a0pMQo/GNEGMGfXcFwnP4QsCQl1GwHWpvph6FisaJ3voJ7jfpjytfv0qM+eIZLYDbNv5DdI2yK6ZaPh3SutCrRRzIUQakF0YpEmdOtyn/m1cJgub2T86vyxNPVyBEIetotlaMYPfzKrmgxCd7yyWXGCxwf9SGfCrPKwPMeLihFal369PhtzgFQMvojtcZkoBQVPTu44yd+sGoIZNd5bjrOfl7mHIpjydCx0q7V+ZHSCxHIbO/v/N+4VnX5uGenVmCy1tTkuN42cRNWjJiPx4QBoC0bHQKhBaHqYtiCSfmOMiQwbVpe6tLK8fvsXACiVkxL8ysaEDeEeNeG4+InbPeE5UQ== root@bastion"
+  clusters:
+  - clusterName: "sno2"
+    # The sdn plugin that will be used
+    networkType: "OVNKubernetes"
+    # extraManifestPath: sno2-extra-manifest
+    # Cluster labels (this will be used by RHACM)
+    clusterLabels:
+      common: "ocp415"
+      logicalGroup: "active"
+      group-du-sno: ""
+      du-site: "sno2"
+      du-zone: "europe"
+    # Pod's SDN network range
+    clusterNetwork:
+      - cidr: "10.128.0.0/14"
+        hostPrefix: 23
+    # Network range where the SNO is connected
+    machineNetwork:
+      - cidr: "192.168.125.0/24"
+    # Services SDN network range
+    serviceNetwork:
+      - "172.30.0.0/16"
+    # cpuPartitioningMode: AllNodes
+    additionalNTPSources:
+      - ntp.tnc.bootcamp.lab
+    # holdInstallation: false
+    nodes:
+      - hostName: "sno2.tnc.bootcamp.lab"
+        role: "master"
+        # We can add custom labels to our nodes, these will be added once the node joins the cluster
+        nodeLabels:
+          5gran.lab/my-custom-label: ""
+        bmcAddress: "redfish-virtualmedia://192.168.125.1:9000/redfish/v1/Systems/local/sno2"
+        # The secret name of the secret containing the bmc credentials for our bare metal node
+        bmcCredentialsName:
+          name: "sno2-bmc-credentials"
+        # The MAC Address of the NIC from the bare metal node connected to the machineNetwork
+        bootMACAddress: "AA:AA:AA:AA:03:01"
+        bootMode: "UEFI"
+        rootDeviceHints:
+          deviceName: /dev/vda
+        nodeNetwork:
+          interfaces:
+            - name: enp1s0
+              macAddress: "AA:AA:AA:AA:03:01"
+          config:
+            interfaces:
+              - name: enp1s0
+                type: ethernet
+                state: up
+                ipv4:
+                  enabled: true
+                  dhcp: true
+                ipv6:
+                  enabled: false
