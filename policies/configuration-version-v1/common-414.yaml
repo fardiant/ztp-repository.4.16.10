@@ -1,0 +1,21 @@
+---
+apiVersion: ran.openshift.io/v1
+kind: PolicyGenTemplate
+metadata:
+  name: "common"
+  namespace: "ztp-policies"
+spec:
+  bindingRules:
+    common: "ocp414"
+    logicalGroup: "active"
+  mcp: master
+  remediationAction: inform
+  sourceFiles:
+    - fileName: OperatorHub.yaml
+      policyName: config-policies
+    - fileName: DefaultCatsrc.yaml
+      metadata:
+        name: redhat-operator-index
+      spec:
+        image: quay.tnc.bootcamp.lab:8443/redhat/redhat-operator-index:v4.14
+      policyName: config-policies
